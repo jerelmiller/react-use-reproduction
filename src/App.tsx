@@ -1,9 +1,7 @@
 import { useState, use, useRef, Suspense, useDeferredValue } from "react";
-import { userEvent } from "@testing-library/user-event";
 import "./App.css";
 
 let count = 0;
-const user = userEvent.setup();
 const cache = new Map<string, Promise<number>>();
 
 function fetchNextNumber(text: string) {
@@ -37,7 +35,16 @@ function App() {
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <button onClick={async () => await user.type(ref.current!, "ab")}>
+      <button
+        onClick={() => {
+          const input = ref.current!;
+
+          type("a", input);
+          queueMicrotask(() => {
+            type("ab", input);
+          });
+        }}
+      >
         Update using userEvent
       </button>
       <Suspense fallback={<div>Loading count...</div>}>
@@ -45,6 +52,16 @@ function App() {
       </Suspense>
     </>
   );
+}
+
+function type(text: string, input: HTMLInputElement) {
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype,
+    "value",
+  )!.set!;
+  nativeInputValueSetter.call(input, text);
+  const event = new Event("input", { bubbles: true });
+  input.dispatchEvent(event);
 }
 
 function Count({ text }: { text: string }) {
