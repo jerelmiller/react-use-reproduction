@@ -19,7 +19,7 @@ test("does not timeout", async () => {
   const cache = new Map<string, Promise<string>>();
   const user = userEvent.setup();
 
-  function fetchNextNumber(text: string) {
+  function fetchValue(text: string) {
     if (cache.has(text)) {
       return cache.get(text)!;
     }
@@ -56,7 +56,7 @@ test("does not timeout", async () => {
   }
 
   function Result({ text }: { text: string }) {
-    const result = use(fetchNextNumber(text));
+    const result = use(fetchValue(text));
 
     return <div data-testid="result">{result}</div>;
   }
