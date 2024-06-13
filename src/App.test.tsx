@@ -12,6 +12,7 @@ import { userEvent } from "@testing-library/user-event";
  *   - Remove the act() call around user.type('ab') (1)
  *   - Simulate typing individual characters (i.e. user.type('a'), user.type('b')) (2)
  *   - Pass `text` instead of `deferredText` into `<Result />` (3)
+ *   - Increase the timeout for the test. It will pass eventually, just not within the default 5s window (4)
  */
 
 test("does not timeout", async () => {
@@ -81,7 +82,13 @@ test("does not timeout", async () => {
   // await act(() => user.type(input, 'a'))
   // await act(() => user.type(input, 'b'))
 
-  await waitFor(() => {
-    expect(screen.getByTestId("result").textContent).toBe("AB");
-  });
+  await waitFor(
+    () => {
+      expect(screen.getByTestId("result").textContent).toBe("AB");
+    },
+    // (4) Add a larger timeout for this test
+    // { timeout: 10000 },
+  );
+  // (4) Add a larger timeout to this test e.g. 15000
+  /* 15000 */
 });
