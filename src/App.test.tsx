@@ -1,6 +1,5 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { act, Suspense, use, useDeferredValue, useState } from "react";
-import { userEvent } from "@testing-library/user-event";
 
 /*
  * This test demonstrates an issue somewhere between useDeferredValue, act, and
@@ -17,7 +16,6 @@ import { userEvent } from "@testing-library/user-event";
 
 test("does not timeout", async () => {
   const cache = new Map<string, Promise<string>>();
-  const user = userEvent.setup();
 
   function fetchValue(text: string) {
     if (cache.has(text)) {
@@ -63,7 +61,7 @@ test("does not timeout", async () => {
 
   render(<App />);
 
-  const input = screen.getByTestId("input");
+  const input = screen.getByTestId("input") as HTMLInputElement;
 
   expect(screen.getByText("Loading...")).not.toBeNull();
 
@@ -73,19 +71,27 @@ test("does not timeout", async () => {
 
   // Comment this out and uncomment one of the solutions below to see this test
   // pass without timing out
-  await act(() => user.type(input, "ab"));
+  await act(async () => {
+    fireEvent.change(input, { target: { value: "a" } });
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    fireEvent.change(input, { target: { value: "ab" } });
+  });
 
   // (1) Removing `act` around this helper works.
-  // await user.type(input, "ab");
+  // fireEvent.change(input, { target: { value: "a" } });
+  // await new Promise((resolve) => setTimeout(resolve, 1));
+  // fireEvent.change(input, { target: { value: "ab" } });
 
-  // (2) Typing each keystroke separately also makes this test pass
-  // await act(() => user.type(input, 'a'))
-  // await act(() => user.type(input, 'b'))
+  // (2) Removing the timeout also works
+  // await act(async () => {
+  //   fireEvent.change(input, { target: { value: "a" } });
+  //   fireEvent.change(input, { target: { value: "ab" } });
+  // });
 
   await waitFor(
     () => {
       expect(screen.getByTestId("result").textContent).toBe("AB");
-    },
+    }
     // (4) Add a larger timeout for this test
     // { timeout: 10000 },
   );
