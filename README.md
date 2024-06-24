@@ -1,30 +1,42 @@
-# React + TypeScript + Vite
+# React `use` bug in tests
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Reproduction for the React 19 bug originally reported in https://github.com/facebook/react/issues/29855.
 
-Currently, two official plugins are available:
+This bug does not seem to affect app code, but does show up in a testing
+environment. See the comments in the [App.test.tsx](./src/App.test.tsx) file for
+ways that the test passes without timing out.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Running the example
 
-## Expanding the ESLint configuration
+1. Install deps
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+```
+npm install
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+2. Run tests
+
+```
+npm test
+```
+
+You should see the test timeout after ~5s (the default jest timeout). Make any
+of the changes from the comments to see the test pass without timing out.
+
+## Running the app in a browser
+
+To compare against a browser environment, you can run the app with the
+following.
+
+> [!NOTE]
+> The bug does not seem to show up in the browser, despite trying to mimic
+> the test as much as possible (i.e. user event timing).
+
+```
+npm run dev
+```
+
+Try clicking the button next to the input to programatically trigger a change.
+The `onChange` handler will fire twice before the `useDeferredValue` value is
+changed to the new type much like you see in a test environment. Note that the
+behavior here works as expected and does not have any unnecessary slowness.
